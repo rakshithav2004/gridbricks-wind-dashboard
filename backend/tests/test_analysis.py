@@ -21,3 +21,60 @@ def test_empty_values():
 def test_mismatched_lengths():
     with pytest.raises(ValueError):
         calculate_metrics([100, 200], [110])
+
+from app.analysis import match_actual_and_forecast
+
+
+def test_match_actual_and_forecast_by_settlement_period():
+    actual_records = [
+        {
+            "settlementDate": "2026-01-01",
+            "settlementPeriod": 1,
+            "fuelType": "WIND",
+            "generation": 15000,
+        },
+        {
+            "settlementDate": "2026-01-01",
+            "settlementPeriod": 2,
+            "fuelType": "WIND",
+            "generation": 15200,
+        },
+    ]
+
+    forecast_records = [
+        {
+            "settlementDate": "2026-01-01",
+            "settlementPeriod": 1,
+            "generation": 14800,
+        },
+    ]
+
+    result = match_actual_and_forecast(actual_records, forecast_records)
+
+    assert len(result) == 1
+    assert result[0]["settlementPeriod"] == 1
+    assert result[0]["actual"] == 15000
+    assert result[0]["forecast"] == 14800
+
+
+def test_match_ignores_non_wind_actual_records():
+    actual_records = [
+        {
+            "settlementDate": "2026-01-01",
+            "settlementPeriod": 1,
+            "fuelType": "BIOMASS",
+            "generation": 1000,
+        },
+    ]
+
+    forecast_records = [
+        {
+            "settlementDate": "2026-01-01",
+            "settlementPeriod": 1,
+            "generation": 900,
+        },
+    ]
+
+    result = match_actual_and_forecast(actual_records, forecast_records)
+
+    assert result == []
