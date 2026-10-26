@@ -1,6 +1,8 @@
 from datetime import date
+
 import httpx
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.analysis import calculate_metrics, match_actual_and_forecast
 from app.elexon import fetch_dataset, fetch_wind_forecast
@@ -9,6 +11,15 @@ app = FastAPI(
     title="Gridbricks Wind Forecast API",
     description="UK wind generation and forecast analysis.",
     version="0.2.0",
+)
+
+# Allow the local React frontend to communicate with FastAPI.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -63,6 +74,7 @@ async def get_actual_generation(
 
     try:
         records = await load_actual_wind(start, end)
+
         return {
             "dataset": "FUELHH",
             "start": start.isoformat(),
@@ -70,13 +82,18 @@ async def get_actual_generation(
             "count": len(records),
             "data": records,
         }
+
     except httpx.HTTPError as exc:
         raise HTTPException(
             status_code=502,
             detail="Unable to retrieve actual generation data from Elexon.",
         ) from exc
+
     except ValueError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=502,
+            detail=str(exc),
+        ) from exc
 
 
 @app.get("/api/wind/forecast")
@@ -88,6 +105,7 @@ async def get_wind_forecast(
 
     try:
         records = await load_forecasts(start, end)
+
         return {
             "dataset": "WINDFOR",
             "start": start.isoformat(),
@@ -95,13 +113,18 @@ async def get_wind_forecast(
             "count": len(records),
             "data": records,
         }
+
     except httpx.HTTPError as exc:
         raise HTTPException(
             status_code=502,
             detail="Unable to retrieve wind forecast data from Elexon.",
         ) from exc
+
     except ValueError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=502,
+            detail=str(exc),
+        ) from exc
 
 
 @app.get("/api/wind/analysis")
@@ -140,5 +163,9 @@ async def get_wind_analysis(
             status_code=502,
             detail="Unable to retrieve wind data from Elexon.",
         ) from exc
+
     except ValueError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=502,
+            detail=str(exc),
+        ) from exc
