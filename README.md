@@ -1,32 +1,44 @@
 # UK Wind Forecast Analysis Dashboard
 
-A full-stack dashboard for analysing wind power generation forecasts against actual generation in Great Britain. Built to help energy analysts explore forecast errors and understand potential implications for electricity purchasing decisions.
+A full-stack analytics dashboard for comparing wind generation forecasts with actual generation in Great Britain. Built using React, FastAPI, Python, and the Elexon BMRS API.
+
+## Live Demo
+
+- **Live Dashboard:** https://gridbricks-wind-dashboard.vercel.app
+- **Backend API:** https://gridbricks-wind-api-gzap.onrender.com
+- **Interactive API Documentation:** https://gridbricks-wind-api-gzap.onrender.com/docs
+- **Health Check:** https://gridbricks-wind-api-gzap.onrender.com/health
+
+> **Note:** The backend runs on Render's free instance, which may take some time to wake up after inactivity.
 
 ## Overview
 
-Wind generation forecasts can differ from actual generation. Understanding these differences can help energy analysts evaluate forecast performance and identify periods that may require further investigation.
+Wind generation forecasts can differ from actual generation. Analysing these differences helps energy analysts evaluate forecast performance and identify periods that may require further investigation.
 
-This project retrieves wind generation data from the **Elexon BMRS API**, processes actual and forecast records, calculates forecast accuracy metrics, and presents the results through an interactive dashboard.
+This application retrieves actual wind generation and forecast records from Elexon BMRS, matches the data by hour, calculates forecast accuracy metrics, and presents the results in an interactive dashboard.
 
-### Key Features
+Users can select a date range, compare actual and forecast generation, review summary metrics, and inspect individual hourly records.
+
+## Key Features
 
 - Retrieve actual wind generation data from Elexon BMRS.
 - Retrieve wind generation forecast data.
-- Compare actual generation with forecast generation by hour.
+- Match actual and forecast values by hour.
 - Calculate Mean Absolute Error (MAE), Root Mean Squared Error (RMSE), and forecast bias.
 - Visualise actual and forecast generation using interactive charts.
 - Filter results by start and end dates.
-- View hourly matched records in a data table.
+- Inspect matched hourly records and forecast publication timestamps.
 - Validate date ranges and handle upstream API errors.
-- Test forecast analysis logic using pytest.
+- Test the backend analysis logic using pytest.
+- Deploy the frontend and backend independently.
 
 ## Technology Stack
 
 ### Frontend
 - React
 - Vite
-- Recharts
 - JavaScript
+- Recharts
 - CSS
 
 ### Backend
@@ -39,21 +51,26 @@ This project retrieves wind generation data from the **Elexon BMRS API**, proces
 ### Data Source
 - Elexon BMRS API
 
+### Deployment
+- Vercel — frontend
+- Render — backend
+- GitHub — source code and version control
+
 ## Architecture
 
-The application uses a frontend-backend architecture.
+The application follows a frontend-backend architecture.
 
-1. The React frontend allows users to select dates and explore the results.
-2. The FastAPI backend requests data from the Elexon BMRS API.
-3. The backend filters actual wind generation records and matches actual and forecast values by hour.
+1. The React frontend lets users select dates and explore the analysis.
+2. The FastAPI backend retrieves actual and forecast records from Elexon BMRS.
+3. The backend filters wind generation data and matches actual and forecast values by hour.
 4. The analysis module calculates forecast accuracy metrics.
-5. The frontend displays the metrics, comparison chart, and hourly records.
+5. The frontend displays summary cards, a generation comparison chart, and hourly records.
 
 ```text
                  Elexon BMRS API
                         |
                         v
-               FastAPI Backend
+                 FastAPI Backend
                         |
              +----------+----------+
              |                     |
@@ -68,7 +85,7 @@ The application uses a frontend-backend architecture.
                Accuracy Metrics
                         |
                         v
-                React Dashboard
+                 React Frontend
            +------------+------------+
            |            |            |
        KPI Cards    Line Chart   Hourly Table
@@ -80,25 +97,29 @@ The dashboard calculates three metrics using matched actual and forecast values.
 
 ### Mean Absolute Error (MAE)
 
-MAE measures the average absolute difference between actual and forecast generation.
+MAE is the average absolute difference between actual and forecast generation.
 
-A lower MAE indicates smaller average forecast errors.
+A lower MAE indicates a smaller average forecast error.
 
 ### Root Mean Squared Error (RMSE)
 
-RMSE gives greater weight to larger errors by squaring the differences before averaging them and taking the square root.
+RMSE is the square root of the average squared difference between actual and forecast generation.
 
-A lower RMSE generally indicates better forecast accuracy.
+Because errors are squared, larger errors have a greater influence on RMSE.
 
 ### Forecast Bias
 
-Bias is calculated as the average of forecast generation minus actual generation.
+Forecast bias is calculated as:
+
+`Average forecast generation - Average actual generation`
+
+Equivalently, it is the mean of the forecast-minus-actual errors over the matched records.
 
 - **Positive bias:** Forecast generation is higher than actual generation on average.
 - **Negative bias:** Forecast generation is lower than actual generation on average.
-- **Bias near zero:** Forecasts have little average directional error, although individual errors may still be large.
+- **Bias near zero:** Average directional error is small, although individual errors may still be large.
 
-All three metrics are expressed in the same generation units as the underlying data.
+All three metrics use the same generation units as the underlying data, reported in MW.
 
 ## Project Structure
 
@@ -116,19 +137,23 @@ gridbricks-wind-dashboard/
 │   ├── src/
 │   │   └── App.jsx
 │   ├── package.json
-│   └── .env
+│   ├── package-lock.json
+│   └── .env.example
 └── README.md
 ```
 
+The structure above shows the main application files. Other frontend components, stylesheets, configuration files, and tests may also be present.
+
+**Environment files:** Keep local `.env` files out of version control when appropriate. Commit an `.env.example` containing placeholder configuration rather than machine-specific or secret values.
+
 ## Prerequisites
 
-Install the following before running the application:
+Install the following:
 
 - Python 3.11 or a compatible Python version
 - Node.js and npm
 - Git
-
-An internet connection is required to retrieve data from Elexon BMRS.
+- An internet connection to retrieve Elexon BMRS data
 
 ## Getting Started
 
@@ -141,22 +166,20 @@ cd gridbricks-wind-dashboard
 
 ### 2. Set up the backend
 
-Open a terminal in the project root.
-
-Create a Python virtual environment:
+From the project root:
 
 ```bash
 cd backend
 python -m venv .venv
 ```
 
-Activate it on Windows PowerShell:
+Activate the environment on Windows PowerShell:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-Install the dependencies:
+Install dependencies:
 
 ```bash
 python -m pip install -r requirements.txt
@@ -178,46 +201,46 @@ Keep this terminal running.
 
 ### 3. Set up the frontend
 
-Open a second terminal and navigate to the frontend directory from the project root:
+Open a second terminal from the project root:
 
 ```bash
 cd frontend
 npm install
 ```
 
-Create or check the frontend `.env` file. For local development, it should contain:
+Create a local `.env` file in the `frontend` directory with:
 
 ```env
 VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
-Start the development server:
+Start the frontend:
 
 ```bash
 npm run dev
 ```
 
-Open the local address printed by Vite, normally:
+Open the address printed by Vite, normally:
 
 http://localhost:5173/
 
-Both the backend and frontend must be running for the dashboard to retrieve live API data.
+Both the backend and frontend must be running for the dashboard to retrieve data locally.
+
+**Configuration note:** Vite reads `VITE_` environment variables during the build. If the API URL changes, restart the development server or rebuild and redeploy the frontend as appropriate.
 
 ## API Endpoints
-
-The backend exposes the following endpoints.
 
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/` | Returns API status information |
 | GET | `/health` | Health check |
 | GET | `/api/wind/actual` | Retrieves actual wind generation records |
-| GET | `/api/wind/forecast` | Retrieves wind generation forecast records |
+| GET | `/api/wind/forecast` | Retrieves wind forecast records |
 | GET | `/api/wind/analysis` | Returns matched records and forecast accuracy metrics |
 
-The wind endpoints accept `start` and `end` query parameters in `YYYY-MM-DD` format. If omitted, the backend defaults to 1 January 2026 through 2 January 2026 as the date boundaries.
+The wind endpoints accept `start` and `end` query parameters in `YYYY-MM-DD` format. The default date boundaries are 1 January 2026 and 2 January 2026, respectively.
 
-Example requests:
+Example local requests:
 
 ```text
 http://127.0.0.1:8000/api/wind/actual?start=2026-01-01&end=2026-01-02
@@ -231,9 +254,13 @@ http://127.0.0.1:8000/api/wind/forecast?start=2026-01-01&end=2026-01-02
 http://127.0.0.1:8000/api/wind/analysis?start=2026-01-01&end=2026-01-02
 ```
 
+The same endpoints are available through the deployed backend:
+
+https://gridbricks-wind-api-gzap.onrender.com/docs
+
 ## Testing
 
-The backend analysis module includes tests for metric calculations, empty input, mismatched input lengths, hourly matching, and filtering out non-wind generation records.
+The backend analysis tests cover metric calculations, empty input, mismatched input lengths, hourly matching, and filtering out non-wind generation records.
 
 From the `backend` directory, activate the virtual environment and run:
 
@@ -243,22 +270,68 @@ python -m pytest -v
 
 The current analysis test suite contains five tests.
 
+The frontend production build was also verified during development.
+
+## Deployment
+
+### Frontend — Vercel
+
+The frontend is deployed on Vercel.
+
+Production URL:
+
+https://gridbricks-wind-dashboard.vercel.app
+
+Configure the following environment variable in the Vercel project settings:
+
+```env
+VITE_API_BASE_URL=https://gridbricks-wind-api-gzap.onrender.com
+```
+
+Ensure the variable is enabled for the required deployment environments and trigger a fresh deployment after changing it.
+
+### Backend — Render
+
+The FastAPI backend is deployed on Render.
+
+Production URL:
+
+https://gridbricks-wind-api-gzap.onrender.com
+
+The backend service uses the `backend` directory as its root directory.
+
+Typical deployment commands:
+
+**Build command**
+
+```bash
+pip install -r requirements.txt
+```
+
+**Start command**
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+The backend's CORS configuration permits the local development frontend and the deployed Vercel frontend.
+
 ## Data Source and Important Limitations
 
 **Data source:** Elexon BMRS, which provides electricity market and generation data for Great Britain.
 
-The application uses the `FUELHH` dataset for actual generation and the wind forecast endpoint for forecast records.
+The application uses the `FUELHH` dataset for actual generation and a wind forecast endpoint for forecast records.
 
 Important considerations:
 
 - Actual and forecast records must be matched correctly before interpreting the metrics.
-- The current implementation only compares hours for which exactly two half-hourly actual records are available.
-- The forecast endpoint provides a latest historical view. It may not represent the forecast that was available to a buyer at the time an electricity purchasing decision was made.
-- Forecast publication times and data availability should be checked before using historical comparisons for trading or purchasing decisions.
+- The current implementation compares hours for which exactly two half-hourly actual records are available.
+- The forecast endpoint provides a latest historical view and may not represent the forecast available to a buyer at the time an electricity purchasing decision was made.
+- Forecast publication timestamps should be reviewed before interpreting historical comparisons as evidence of forecast performance at a particular decision time.
 - The metrics are analytical indicators, not guarantees of financial outcomes.
-- API availability and response formats may affect data retrieval.
+- Upstream API availability and response formats may affect data retrieval.
 
-For decision-grade backtesting, the analysis should use forecast versions that were available at the relevant decision time, rather than relying solely on the latest forecast view.
+For decision-grade backtesting, use forecast versions that were available at the relevant decision time rather than relying solely on the latest forecast view.
 
 ## Potential Future Improvements
 
@@ -266,9 +339,9 @@ For decision-grade backtesting, the analysis should use forecast versions that w
 - Expand the analysis to longer date ranges.
 - Add daily and weekly performance summaries.
 - Compare forecast errors across different periods.
-- Add more robust data-quality checks and API retry handling.
-- Improve deployment configuration and production monitoring.
+- Improve data-quality checks, retry handling, and error reporting.
 - Add automated frontend tests and API integration tests.
+- Improve monitoring and operational observability.
 
 ## Author
 
@@ -278,4 +351,4 @@ GitHub: https://github.com/rakshithav2004
 
 ---
 
-*Developed as a full-stack wind generation forecast analysis project using React, FastAPI, Python, and Elexon BMRS data.*
+Developed as a full-stack wind generation forecast analysis project using React, FastAPI, Python, and Elexon BMRS data.
