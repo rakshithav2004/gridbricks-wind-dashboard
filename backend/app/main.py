@@ -13,15 +13,17 @@ app = FastAPI(
     version="0.2.0",
 )
 
-# Allow the local React frontend to communicate with FastAPI.
+# Allow local development and the deployed Vercel frontend.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://gridbricks-wind-dashboard.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 @app.get("/")
 def root():
